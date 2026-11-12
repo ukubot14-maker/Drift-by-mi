@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const startPanel=$("startPanel"),settings=$("settings"),status=$("status"),scoreLabel=$("score"),speedControl=$("speedControl"),speedValue=$("speedValue");
 let gameSpeed=1;speedControl.addEventListener("input",()=>{gameSpeed=Number(speedControl.value)/100;speedValue.textContent=Number(speedControl.value)+"%"});
 let W=innerWidth,H=innerHeight,DPR=1;
-function resize(){DPR=Math.min(devicePixelRatio||1,1);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
+function resize(){DPR=Math.min(devicePixelRatio||1,.7);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener("resize",resize);resize();
 let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
 let socket=null,myId=null,remotePlayers=[],netTimer=0;
@@ -88,7 +88,7 @@ car.slip=car.v>1?Math.atan2(Math.sin(car.a-velocityAngle),Math.cos(car.a-velocit
 car.x+=car.vx*dt;car.y+=car.vy*dt;
 if(Math.abs(car.x)>560){car.vx*=-.4;car.x=Math.sign(car.x)*560}if(Math.abs(car.y)>420){car.vy*=-.4;car.y=Math.sign(car.y)*420}
 const drifting=car.v>75&&Math.abs(car.slip)>.13;
-if(drifting){car.score+=car.v*Math.abs(car.slip)*dt*1.25;const rx=car.x-fx*20,ry=car.y-fy*20;for(const side of [-1,1]){if(tireMarks.length<650)tireMarks.push({x:rx+side*sx*10,y:ry+side*sy*10,life:6})}if(smoke.length<45&&Math.random()<.35)smoke.push({x:rx+(Math.random()-.5)*18,y:ry+(Math.random()-.5)*18,vx:car.vx*.05+(Math.random()-.5)*18,vy:car.vy*.05+(Math.random()-.5)*18,life:.7})}
+if(drifting){car.score+=car.v*Math.abs(car.slip)*dt*1.25;const rx=car.x-fx*20,ry=car.y-fy*20;for(const side of [-1,1]){if(tireMarks.length<220)tireMarks.push({x:rx+side*sx*10,y:ry+side*sy*10,life:6})}if(smoke.length<18&&Math.random()<.18)smoke.push({x:rx+(Math.random()-.5)*18,y:ry+(Math.random()-.5)*18,vx:car.vx*.05+(Math.random()-.5)*18,vy:car.vy*.05+(Math.random()-.5)*18,life:.7})}
 for(let i=tireMarks.length-1;i>=0;i--){tireMarks[i].life-=dt;if(tireMarks[i].life<=0)tireMarks.splice(i,1)}
 for(let i=smoke.length-1;i>=0;i--){const p=smoke[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)smoke.splice(i,1)}
 if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a,model:car.model}))}}
@@ -122,11 +122,11 @@ function draw(){
 ctx.fillStyle="#252b31";ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(W/2-car.x,H/2-car.y);
 g.drawImage(trackCanvas,-800,-650);
 
-for(const m of tireMarks){ctx.globalAlpha=Math.min(.7,m.life/2);ctx.fillStyle="#111418";ctx.beginPath();ctx.arc(m.x,m.y,3.2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+ctx.globalAlpha=.55;ctx.fillStyle="#111418";ctx.beginPath();for(const m of tireMarks){ctx.moveTo(m.x+3.2,m.y);ctx.arc(m.x,m.y,3.2,0,Math.PI*2)}ctx.fill();ctx.globalAlpha=1;
 for(const p of smoke){ctx.globalAlpha=Math.max(0,p.life/.55)*.22;ctx.fillStyle="#d9e0e5";ctx.beginPath();ctx.arc(p.x,p.y,7+(1-p.life/.55)*12,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
 carDraw(car.x,car.y,car.a,car.model);for(const p of remotePlayers){if(p.id===myId)continue;carDraw(p.x,p.y,p.a,p.model||1);ctx.fillStyle="#fff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.name||"Player",p.x,p.y-34)}ctx.restore();
 if(running&&Math.abs(car.slip)>.12){ctx.fillStyle="#fff";ctx.font="bold 14px system-ui";ctx.fillText("SLIP "+Math.round(Math.abs(car.slip)*57.3)+"°",W-100,82)}
 }
-function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;let sim=dt*gameSpeed;while(sim>0){const step=Math.min(sim,.025);update(step);sim-=step}draw();requestAnimationFrame(frame)}
+function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;update(Math.min(dt*gameSpeed,.12));draw();requestAnimationFrame(frame)}
 status.textContent="Ready • tap Start";requestAnimationFrame(frame);
 })();
