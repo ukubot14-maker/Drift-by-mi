@@ -6,13 +6,17 @@ const startPanel=$("startPanel"),settings=$("settings"),status=$("status"),score
 let W=innerWidth,H=innerHeight,DPR=1;
 function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener("resize",resize);resize();
-let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};\nlet socket=null,myId=null,remotePlayers=[],netTimer=0;
+let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
+let socket=null,myId=null,remotePlayers=[],netTimer=0;
 const car={x:0,y:0,a:0,v:0,score:0};
 function reset(){car.x=car.y=car.v=car.score=0;car.a=0}
 function start(){if(running)return;running=true;startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
-$("startBtn").addEventListener("click",start);\n$("startBtn").addEventListener("touchend",e=>{e.preventDefault();start()},{passive:false});
+$("startBtn").addEventListener("click",start);
+$("startBtn").addEventListener("touchend",e=>{e.preventDefault();start()},{passive:false});
 $("settingsBtn").addEventListener("click",()=>settings.classList.toggle("hidden"));
-$("doneBtn").addEventListener("click",()=>settings.classList.add("hidden"));\n$("connectBtn").addEventListener("click",connectMultiplayer);\nfunction connectMultiplayer(){const url=$("serverUrl").value.trim();if(!url){status.textContent="Enter your Render WSS URL";return}try{if(socket)socket.close();socket=new WebSocket(url);status.textContent="Connecting…";socket.onopen=()=>{status.textContent="MULTIPLAYER CONNECTED";netTimer=0};socket.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==="welcome")myId=m.id;if(m.type==="players")remotePlayers=m.players||[]}catch{}};socket.onerror=()=>status.textContent="Multiplayer connection failed";socket.onclose=()=>{status.textContent="Offline • multiplayer disconnected";myId=null}}catch{status.textContent="Invalid server URL"}}
+$("doneBtn").addEventListener("click",()=>settings.classList.add("hidden"));
+$("connectBtn").addEventListener("click",connectMultiplayer);
+function connectMultiplayer(){const url=$("serverUrl").value.trim();if(!url){status.textContent="Enter your Render WSS URL";return}try{if(socket)socket.close();socket=new WebSocket(url);status.textContent="Connecting…";socket.onopen=()=>{status.textContent="MULTIPLAYER CONNECTED";netTimer=0};socket.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==="welcome")myId=m.id;if(m.type==="players")remotePlayers=m.players||[]}catch{}};socket.onerror=()=>status.textContent="Multiplayer connection failed";socket.onclose=()=>{status.textContent="Offline • multiplayer disconnected";myId=null}}catch{status.textContent="Invalid server URL"}}
 $("touchToggle").addEventListener("change",()=>{$("touchControls").style.display=$("touchToggle").checked?"block":"none"});
 $("touchToggle").checked=true;
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys.add(k;if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();if(k==="r")reset()});
@@ -34,7 +38,8 @@ const brake=keys.has("s")||keys.has("arrowdown")||touch.brake||($("touchToggle")
 const hand=keys.has(" ")||touch.hand;
 car.v+=(gas?260:0)-(brake?390:0)-car.v*(hand?2.3:1.05);car.v*=Math.max(0,1-dt*.18);car.v=Math.max(-100,Math.min(440,car.v));
 car.a+=steer*dt*(.8+Math.abs(car.v)/95)*(hand?2.2:1)*Math.sign(car.v||1);
-car.x+=Math.sin(car.a)*car.v*dt;car.y-=Math.cos(car.a)*car.v*dt;\nif(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a}))}}
+car.x+=Math.sin(car.a)*car.v*dt;car.y-=Math.cos(car.a)*car.v*dt;
+if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a}))}}
 if((hand||Math.abs(steer)>.25)&&Math.abs(car.v)>100)car.score+=Math.abs(car.v)*Math.abs(steer)*dt*.5;
 scoreLabel.textContent="Drift: "+Math.floor(car.score);
 }
