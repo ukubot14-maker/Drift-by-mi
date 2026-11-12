@@ -21,7 +21,7 @@
 <p class="help">Keyboard: WASD / arrows • Space = handbrake • R = reset</p>
 </section>
 <section id="settings" class="panel hidden">
-<h2>Settings</h2><label><input id="touchToggle" type="checkbox" checked> On-screen controls</label>
+<h2>Settings</h2><label for="speedControl">Game speed: <strong id="speedValue">100%</strong></label><input id="speedControl" type="range" min="0.5" max="1000" step="0.5" value="100"><p>0.5% (slow motion) to 1000% (10× speed)</p><label><input id="touchToggle" type="checkbox" checked> On-screen controls</label>
 <p>Joystick steers. Push up to accelerate, down to brake.</p><label for="serverUrl">Multiplayer server (wss://)</label><input id="serverUrl" placeholder="wss://your-render-service.onrender.com"><button id="connectBtn" type="button">CONNECT MULTIPLAYER</button><button id="doneBtn" type="button">DONE</button>
 </section>
 <div id="touchControls" aria-label="Touch driving controls">
