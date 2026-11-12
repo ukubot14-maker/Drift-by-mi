@@ -3,7 +3,7 @@ const keys={};let joyX=0,joyY=0,gasTouch=false,brakeTouch=false,handTouch=false;
 const settings=document.querySelector('#settings'),joy=document.querySelector('#joystick'),knob=document.querySelector('#joyKnob'),pedals=document.querySelector('#pedals'),joyToggle=document.querySelector('#joyToggle');
 document.querySelector('#settingsBtn').onclick=()=>settings.classList.remove('hidden');
 document.querySelector('#closeSettings').onclick=()=>settings.classList.add('hidden');
-joyToggle.onchange=()=>{joy.classList.toggle('hidden',!joyToggle.checked);pedals.classList.toggle('hidden',!joyToggle.checked)};
+joyToggle.onchange=()=>{joy.classList.toggle('hidden',!joyToggle.checked);pedals.classList.toggle('hidden',!joyToggle.checked)};joyToggle.checked=true;joyToggle.onchange();;
 function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,lim=r.width*.34;let dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy);if(len>lim){dx*=lim/len;dy*=lim/len}joyX=dx/lim;joyY=dy/lim;knob.style.transform=`translate(${dx}px,${dy}px)`}
 joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);joyMove(e)});
 joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))joyMove(e)});
