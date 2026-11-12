@@ -70,7 +70,7 @@ const gas=keys.has("w")||keys.has("arrowup")||touch.gas||($("touchToggle").check
 const brake=keys.has("s")||keys.has("arrowdown")||touch.brake||($("touchToggle").checked&&touch.y>.35);
 const hand=keys.has(" ")||touch.hand;
 const speed=Math.hypot(car.vx,car.vy),forward=car.vx*Math.sin(car.a)-car.vy*Math.cos(car.a);
-const steerMax=.57;car.steerAngle=steerInput*steerMax*(1-Math.min(.72,speed/520));
+const steerMax=.57;car.steerAngle=steerInput*steerMax*(1-Math.min(.58,speed/1900));
 const fx=Math.sin(car.a),fy=-Math.cos(car.a),sx=Math.cos(car.a),sy=Math.sin(car.a);
 const vLong=car.vx*fx+car.vy*fy,vLat=car.vx*sx+car.vy*sy,yawRate=car.omega;
 const wheelbase=31.4,frontDist=wheelbase*.56,rearDist=wheelbase*.44;
@@ -79,7 +79,7 @@ const rearSlip=Math.atan2(vLat-yawRate*rearDist,Math.max(8,Math.abs(vLong)));
 const ff=-frontSlip*1450*(hand?1:.95),rf=-rearSlip*1350*(hand?.43:1);
 const FyFront=Math.max(-8500,Math.min(8500,ff)),FyRear=Math.max(-9000,Math.min(9000,rf));
 const accelLat=(FyFront+FyRear)/1320,yawAccel=(FyFront*frontDist-FyRear*rearDist)/2150;
-const drive=(gas?6700:0)-(brake?9900:0)-(hand?Math.sign(vLong||1)*6800:0)-.00042*speed*speed-.018*1320*9.81;
+const drive=(gas?16500:0)-(brake?14500:0)-(hand?Math.sign(vLong||1)*9200:0)-.00016*speed*speed-.008*1320*9.81;
 const accelLong=drive/1320;
 car.vx+=(fx*accelLong+sx*accelLat)*dt;car.vy+=(fy*accelLong+sy*accelLat)*dt;
 car.omega+=yawAccel*dt;car.omega*=Math.max(0,1-dt*(hand?.18:.48));car.a+=car.omega*dt;
