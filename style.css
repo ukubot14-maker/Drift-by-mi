@@ -8,3 +8,12 @@
 #pedals button{margin:0;padding:15px 8px;background:#ffffff30;color:white;border:1px solid #ffffff55;touch-action:none;user-select:none}
 #pedals button:active{background:#ffcf32;color:#111}
 @media(max-width:600px){#hud{padding:10px;font-size:12px}#joystick{width:130px;height:130px;left:15px;bottom:18px}#joyKnob{width:55px;height:55px}#pedals{right:12px;bottom:18px;width:80px}}
+
+/* Ensure game UI stays above the canvas and accepts touch/click input */
+canvas{pointer-events:none}
+#hud,#panel,#settings,#joystick,#pedals{pointer-events:auto}
+button,input,label{position:relative;z-index:10;touch-action:manipulation}
+#hud{z-index:5}
+#panel{z-index:6}
+#settings{z-index:20}
+#joystick,#pedals{z-index:7}
