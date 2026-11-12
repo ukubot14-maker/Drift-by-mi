@@ -8,7 +8,7 @@ function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight
 addEventListener("resize",resize);resize();
 let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
 let socket=null,myId=null,remotePlayers=[],netTimer=0;
-const car={x:0,y:0,a:0,v:0,vx:0,vy:0,score:0,name:"Driver",slip:0,model:0};
+const car={x:0,y:0,a:0,v:0,vx:0,vy:0,score:0,name:"Driver",slip:0,model:0,omega:0,steerAngle:0};
 const carModels=[{name:"Coupe",color:"#ffcf32",accent:"#20252b"},{name:"JDM",color:"#e83b48",accent:"#f4f4f4"},{name:"Muscle",color:"#3c9bff",accent:"#f7d34a"},{name:"Rally",color:"#e9e9e9",accent:"#e13b32"}];
 const tireMarks=[],smoke=[];
 function reset(){car.x=car.y=car.v=car.vx=car.vy=car.score=0;car.a=car.slip=0;tireMarks.length=0;smoke.length=0}
@@ -36,37 +36,33 @@ let last=0;
 function update(dt){
 if(!running)return;
 const left=keys.has("a")||keys.has("arrowleft"),right=keys.has("d")||keys.has("arrowright");
-const steer=Math.max(-1,Math.min(1,(right?1:0)-(left?1:0)+touch.x));
+const steerInput=Math.max(-1,Math.min(1,(right?1:0)-(left?1:0)+touch.x));
 const gas=keys.has("w")||keys.has("arrowup")||touch.gas||($("touchToggle").checked&&touch.y<-.22);
 const brake=keys.has("s")||keys.has("arrowdown")||touch.brake||($("touchToggle").checked&&touch.y>.35);
 const hand=keys.has(" ")||touch.hand;
-const forwardX=Math.sin(car.a),forwardY=-Math.cos(car.a);
-const speed=Math.hypot(car.vx,car.vy);
-const forwardSpeed=car.vx*forwardX+car.vy*forwardY;
-car.a+=steer*dt*(.45+Math.abs(forwardSpeed)/115)*(hand?2.45:1)*Math.sign(forwardSpeed||1);
-const fx=Math.sin(car.a),fy=-Math.cos(car.a);
-car.vx+=fx*((gas?300:0)-(brake?420:0))*dt;
-car.vy+=fy*((gas?300:0)-(brake?420:0))*dt;
-const sideX=Math.cos(car.a),sideY=Math.sin(car.a);
-const lateral=car.vx*sideX+car.vy*sideY;
-const grip=hand?1.15:8.5;
-car.vx-=sideX*lateral*Math.min(1,grip*dt);
-car.vy-=sideY*lateral*Math.min(1,grip*dt);
-car.vx*=Math.max(0,1-dt*(hand?.42:.85));car.vy*=Math.max(0,1-dt*(hand?.42:.85));
-car.v=Math.hypot(car.vx,car.vy);car.v=Math.min(car.v,hand?390:470);
-if(car.v>0){const velocityAngle=Math.atan2(car.vx,-car.vy);car.slip=Math.atan2(Math.sin(car.a-velocityAngle),Math.cos(car.a-velocityAngle))}
-else car.slip=0;
+const speed=Math.hypot(car.vx,car.vy),forward=car.vx*Math.sin(car.a)-car.vy*Math.cos(car.a);
+const steerMax=.57;car.steerAngle=steerInput*steerMax*(1-Math.min(.72,speed/520));
+const fx=Math.sin(car.a),fy=-Math.cos(car.a),sx=Math.cos(car.a),sy=Math.sin(car.a);
+const vLong=car.vx*fx+car.vy*fy,vLat=car.vx*sx+car.vy*sy,yawRate=car.omega;
+const wheelbase=31.4,frontDist=wheelbase*.56,rearDist=wheelbase*.44;
+const frontSlip=Math.atan2(vLat+yawRate*frontDist,Math.max(8,Math.abs(vLong)))-car.steerAngle;
+const rearSlip=Math.atan2(vLat-yawRate*rearDist,Math.max(8,Math.abs(vLong)));
+const ff=-frontSlip*1450*(hand?1:.95),rf=-rearSlip*1350*(hand?.43:1);
+const FyFront=Math.max(-8500,Math.min(8500,ff)),FyRear=Math.max(-9000,Math.min(9000,rf));
+const accelLat=(FyFront+FyRear)/1320,yawAccel=(FyFront*frontDist-FyRear*rearDist)/2150;
+const drive=(gas?6700:0)-(brake?9900:0)-(hand?Math.sign(vLong||1)*6800:0)-.00042*speed*speed-.018*1320*9.81;
+const accelLong=drive/1320;
+car.vx+=(fx*accelLong+sx*accelLat)*dt;car.vy+=(fy*accelLong+sy*accelLat)*dt;
+car.omega+=yawAccel*dt;car.omega*=Math.max(0,1-dt*(hand?.18:.48));car.a+=car.omega*dt;
+car.v=Math.hypot(car.vx,car.vy);const velocityAngle=Math.atan2(car.vx,-car.vy);
+car.slip=car.v>1?Math.atan2(Math.sin(car.a-velocityAngle),Math.cos(car.a-velocityAngle)):0;
 car.x+=car.vx*dt;car.y+=car.vy*dt;
-const drifting=car.v>95&&Math.abs(car.slip)>.16;
-if(drifting){
-car.score+=car.v*Math.abs(car.slip)*dt*1.35;
-const rearX=car.x-fx*20,rearY=car.y-fy*20;
-for(const side of [-1,1])tireMarks.push({x:rearX+side*sideX*10,y:rearY+side*sideY*10,life:5});
-if(Math.random()<.8)smoke.push({x:rearX+(Math.random()-.5)*22,y:rearY+(Math.random()-.5)*22,vx:(Math.random()-.5)*35,vy:(Math.random()-.5)*35,life:.55});
-}
+if(Math.abs(car.x)>560){car.vx*=-.4;car.x=Math.sign(car.x)*560}if(Math.abs(car.y)>420){car.vy*=-.4;car.y=Math.sign(car.y)*420}
+const drifting=car.v>75&&Math.abs(car.slip)>.13;
+if(drifting){car.score+=car.v*Math.abs(car.slip)*dt*1.25;const rx=car.x-fx*20,ry=car.y-fy*20;for(const side of [-1,1])tireMarks.push({x:rx+side*sx*10,y:ry+side*sy*10,life:6});if(Math.random()<.8)smoke.push({x:rx+(Math.random()-.5)*18,y:ry+(Math.random()-.5)*18,vx:car.vx*.05+(Math.random()-.5)*18,vy:car.vy*.05+(Math.random()-.5)*18,life:.7})}
 for(let i=tireMarks.length-1;i>=0;i--){tireMarks[i].life-=dt;if(tireMarks[i].life<=0)tireMarks.splice(i,1)}
 for(let i=smoke.length-1;i>=0;i--){const p=smoke[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)smoke.splice(i,1)}
-if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a}))}}
+if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a,model:car.model}))}}
 scoreLabel.textContent="Drift: "+Math.floor(car.score);
 }
 function carDraw(x,y,a,modelIndex=0){
