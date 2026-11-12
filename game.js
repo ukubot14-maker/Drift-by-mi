@@ -127,6 +127,6 @@ for(const p of smoke){ctx.globalAlpha=Math.max(0,p.life/.55)*.22;ctx.fillStyle="
 carDraw(car.x,car.y,car.a,car.model);for(const p of remotePlayers){if(p.id===myId)continue;carDraw(p.x,p.y,p.a,p.model||1);ctx.fillStyle="#fff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.name||"Player",p.x,p.y-34)}ctx.restore();
 if(running&&Math.abs(car.slip)>.12){ctx.fillStyle="#fff";ctx.font="bold 14px system-ui";ctx.fillText("SLIP "+Math.round(Math.abs(car.slip)*57.3)+"°",W-100,82)}
 }
-function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;update(Math.min(dt*gameSpeed,.12));draw();requestAnimationFrame(frame)}
+function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;let sim=dt*gameSpeed;while(sim>0){const step=Math.min(sim,.025);update(step);sim-=step}draw();requestAnimationFrame(frame)}
 status.textContent="Ready • tap Start";requestAnimationFrame(frame);
 })();
