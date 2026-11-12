@@ -8,9 +8,9 @@ function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight
 addEventListener("resize",resize);resize();
 let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
 let socket=null,myId=null,remotePlayers=[],netTimer=0;
-const car={x:0,y:0,a:0,v:0,score:0};
+const car={x:0,y:0,a:0,v:0,score:0,name:"Driver"};
 function reset(){car.x=car.y=car.v=car.score=0;car.a=0}
-function start(){if(running)return;running=true;startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
+function start(){if(running)return;running=true;car.name=$("driverName").value.trim()||"Driver";startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
 $("startBtn").addEventListener("click",start);
 $("startBtn").addEventListener("touchend",e=>{e.preventDefault();start()},{passive:false});
 $("settingsBtn").addEventListener("click",()=>settings.classList.toggle("hidden"));
