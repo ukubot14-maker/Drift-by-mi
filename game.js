@@ -10,7 +10,7 @@ let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false
 const car={x:0,y:0,a:0,v:0,score:0};
 function reset(){car.x=car.y=car.v=car.score=0;car.a=0}
 function start(){if(running)return;running=true;startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
-$("startBtn").addEventListener("click",start);
+$("startBtn").addEventListener("click",start);\n$("startBtn").addEventListener("touchend",e=>{e.preventDefault();start()},{passive:false});
 $("settingsBtn").addEventListener("click",()=>settings.classList.toggle("hidden"));
 $("doneBtn").addEventListener("click",()=>settings.classList.add("hidden"));
 $("touchToggle").addEventListener("change",()=>{$("touchControls").style.display=$("touchToggle").checked?"block":"none"});
