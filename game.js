@@ -6,13 +6,13 @@ const startPanel=$("startPanel"),settings=$("settings"),status=$("status"),score
 let W=innerWidth,H=innerHeight,DPR=1;
 function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener("resize",resize);resize();
-let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
+let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};\nlet socket=null,myId=null,remotePlayers=[],netTimer=0;
 const car={x:0,y:0,a:0,v:0,score:0};
 function reset(){car.x=car.y=car.v=car.score=0;car.a=0}
 function start(){if(running)return;running=true;startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
 $("startBtn").addEventListener("click",start);\n$("startBtn").addEventListener("touchend",e=>{e.preventDefault();start()},{passive:false});
 $("settingsBtn").addEventListener("click",()=>settings.classList.toggle("hidden"));
-$("doneBtn").addEventListener("click",()=>settings.classList.add("hidden"));
+$("doneBtn").addEventListener("click",()=>settings.classList.add("hidden"));\n$("connectBtn").addEventListener("click",connectMultiplayer);\nfunction connectMultiplayer(){const url=$("serverUrl").value.trim();if(!url){status.textContent="Enter your Render WSS URL";return}try{if(socket)socket.close();socket=new WebSocket(url);status.textContent="Connecting…";socket.onopen=()=>{status.textContent="MULTIPLAYER CONNECTED";netTimer=0};socket.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==="welcome")myId=m.id;if(m.type==="players")remotePlayers=m.players||[]}catch{}};socket.onerror=()=>status.textContent="Multiplayer connection failed";socket.onclose=()=>{status.textContent="Offline • multiplayer disconnected";myId=null}}catch{status.textContent="Invalid server URL"}}
 $("touchToggle").addEventListener("change",()=>{$("touchControls").style.display=$("touchToggle").checked?"block":"none"});
 $("touchToggle").checked=true;
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys.add(k;if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();if(k==="r")reset()});
@@ -34,7 +34,7 @@ const brake=keys.has("s")||keys.has("arrowdown")||touch.brake||($("touchToggle")
 const hand=keys.has(" ")||touch.hand;
 car.v+=(gas?260:0)-(brake?390:0)-car.v*(hand?2.3:1.05);car.v*=Math.max(0,1-dt*.18);car.v=Math.max(-100,Math.min(440,car.v));
 car.a+=steer*dt*(.8+Math.abs(car.v)/95)*(hand?2.2:1)*Math.sign(car.v||1);
-car.x+=Math.sin(car.a)*car.v*dt;car.y-=Math.cos(car.a)*car.v*dt;
+car.x+=Math.sin(car.a)*car.v*dt;car.y-=Math.cos(car.a)*car.v*dt;\nif(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a}))}}
 if((hand||Math.abs(steer)>.25)&&Math.abs(car.v)>100)car.score+=Math.abs(car.v)*Math.abs(steer)*dt*.5;
 scoreLabel.textContent="Drift: "+Math.floor(car.score);
 }
@@ -44,7 +44,7 @@ ctx.fillStyle="#30373e";ctx.fillRect(-5000,-5000,10000,10000);
 ctx.strokeStyle="#3a434b";ctx.lineWidth=1;for(let x=-5000;x<=5000;x+=100){ctx.beginPath();ctx.moveTo(x,-5000);ctx.lineTo(x,5000);ctx.stroke()}for(let y=-5000;y<=5000;y+=100){ctx.beginPath();ctx.moveTo(-5000,y);ctx.lineTo(5000,y);ctx.stroke()}
 ctx.strokeStyle="#e6e8e9";ctx.lineWidth=5;ctx.setLineDash([32,24]);ctx.beginPath();ctx.arc(0,0,430,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
 ctx.strokeStyle="#717b84";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,510,0,Math.PI*2);ctx.stroke();
-carDraw(car.x,car.y,car.a,"#ffcf32");ctx.restore()}
+carDraw(car.x,car.y,car.a,"#ffcf32");for(const p of remotePlayers){if(p.id===myId)continue;carDraw(p.x,p.y,p.a,p.color||"#5be7ff");ctx.fillStyle="#fff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.name||"Player",p.x,p.y-34)}ctx.restore()}
 function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;update(dt);draw();requestAnimationFrame(frame)}
 status.textContent="Ready • tap Start";requestAnimationFrame(frame);
 })();
