@@ -17,3 +17,6 @@ button,input,label{position:relative;z-index:10;touch-action:manipulation}
 #panel{z-index:6}
 #settings{z-index:20}
 #joystick,#pedals{z-index:7}
+
+/* Final interaction repair: explicit clickable layers */
+html,body{position:relative;min-height:100%;isolation:isolate}#game{position:fixed;inset:0;z-index:0;pointer-events:none}#hud{position:fixed;z-index:30;pointer-events:none}#hud button{pointer-events:auto}#panel{position:fixed;z-index:40;pointer-events:auto}#settings{position:fixed;z-index:50;pointer-events:auto}#panel button,#settings button,#panel input,#settings input{pointer-events:auto;cursor:pointer}
