@@ -1,1 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Drift by Ukubot</title><link rel="stylesheet" href="style.css"></head><body><canvas id="game"></canvas><header id="hud"><strong>DRIFT BY UKUBOT</strong><span id="status">Ready</span><span id="score">Drift: 0</span><button id="settingsBtn">⚙</button></header><section id="startPanel" class="panel"><h1>DRIFT BY UKUBOT</h1><p>Free roam • drift arena</p><input id="driverName" maxlength="16" placeholder="Driver name" value="Driver"><button id="startBtn" class="primary">START DRIVING</button><p class="help">Keyboard: WASD / arrows • Space = handbrake • R = reset</p></section><section id="settings" class="panel hidden"><h2>Settings</h2><label><input id="touchToggle" type="checkbox" checked> On-screen controls</label><p>Joystick steers. Push up to accelerate, down to brake.</p><button id="doneBtn">DONE</button></section><div id="touchControls"><div id="stick"><div id="stickKnob"></div></div><div id="pedals"><button id="gas">GAS ▲</button><button id="brake">BRAKE ▼</button><button id="hand">HAND</button></div></div><script src="game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#20262c">
+<title>Drift by Ukubot</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game" aria-label="Drift arena"></canvas>
+<header id="hud">
+<strong>DRIFT BY UKUBOT</strong><span id="status">Ready</span><span id="score">Drift: 0</span>
+<button id="settingsBtn" type="button" aria-label="Settings">⚙</button>
+</header>
+<section id="startPanel" class="panel">
+<h1>DRIFT BY UKUBOT</h1><p>Free roam • drift arena</p>
+<label class="sr-only" for="driverName">Driver name</label>
+<input id="driverName" maxlength="16" autocomplete="nickname" placeholder="Driver name" value="Driver">
+<button id="startBtn" class="primary" type="button">START DRIVING</button>
+<p class="help">Keyboard: WASD / arrows • Space = handbrake • R = reset</p>
+</section>
+<section id="settings" class="panel hidden">
+<h2>Settings</h2><label><input id="touchToggle" type="checkbox" checked> On-screen controls</label>
+<p>Joystick steers. Push up to accelerate, down to brake.</p><button id="doneBtn" type="button">DONE</button>
+</section>
+<div id="touchControls" aria-label="Touch driving controls">
+<div id="stick" aria-label="Steering joystick"><div id="stickKnob"></div></div>
+<div id="pedals"><button id="gas" type="button">GAS ▲</button><button id="brake" type="button">BRAKE ▼</button><button id="hand" type="button">HAND</button></div>
+</div>
+<script src="game.js"></script>
+</body></html>
