@@ -1,1 +1,7 @@
-services:\n  - type: web\n    name: drift-by-ukubot\n    runtime: node\n    plan: free\n    buildCommand: npm install\n    startCommand: npm start\n
+services:
+  - type: web
+    name: drift-by-ukubot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
