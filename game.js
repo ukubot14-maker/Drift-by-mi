@@ -4,7 +4,7 @@ const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const $=id=>document.getElementById(id);
 const startPanel=$("startPanel"),settings=$("settings"),status=$("status"),scoreLabel=$("score");
 let W=innerWidth,H=innerHeight,DPR=1;
-function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
+function resize(){DPR=Math.min(devicePixelRatio||1,1.25);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener("resize",resize);resize();
 let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
 let socket=null,myId=null,remotePlayers=[],netTimer=0;
@@ -59,7 +59,7 @@ car.slip=car.v>1?Math.atan2(Math.sin(car.a-velocityAngle),Math.cos(car.a-velocit
 car.x+=car.vx*dt;car.y+=car.vy*dt;
 if(Math.abs(car.x)>560){car.vx*=-.4;car.x=Math.sign(car.x)*560}if(Math.abs(car.y)>420){car.vy*=-.4;car.y=Math.sign(car.y)*420}
 const drifting=car.v>75&&Math.abs(car.slip)>.13;
-if(drifting){car.score+=car.v*Math.abs(car.slip)*dt*1.25;const rx=car.x-fx*20,ry=car.y-fy*20;for(const side of [-1,1])tireMarks.push({x:rx+side*sx*10,y:ry+side*sy*10,life:6});if(Math.random()<.8)smoke.push({x:rx+(Math.random()-.5)*18,y:ry+(Math.random()-.5)*18,vx:car.vx*.05+(Math.random()-.5)*18,vy:car.vy*.05+(Math.random()-.5)*18,life:.7})}
+if(drifting){car.score+=car.v*Math.abs(car.slip)*dt*1.25;const rx=car.x-fx*20,ry=car.y-fy*20;for(const side of [-1,1]){if(tireMarks.length<650)tireMarks.push({x:rx+side*sx*10,y:ry+side*sy*10,life:6})}if(smoke.length<45&&Math.random()<.35)smoke.push({x:rx+(Math.random()-.5)*18,y:ry+(Math.random()-.5)*18,vx:car.vx*.05+(Math.random()-.5)*18,vy:car.vy*.05+(Math.random()-.5)*18,life:.7})}
 for(let i=tireMarks.length-1;i>=0;i--){tireMarks[i].life-=dt;if(tireMarks[i].life<=0)tireMarks.splice(i,1)}
 for(let i=smoke.length-1;i>=0;i--){const p=smoke[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)smoke.splice(i,1)}
 if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a,model:car.model}))}}
@@ -96,8 +96,8 @@ ctx.fillStyle="#17251d";ctx.fillRect(-5000,-5000,10000,10000);
 // Stadium perimeter and grandstand sectors
 ctx.fillStyle="#26333b";ctx.strokeStyle="#596975";ctx.lineWidth=18;ctx.beginPath();ctx.roundRect(-760,-620,1520,1240,180);ctx.fill();ctx.stroke();
 ctx.fillStyle="#36434d";ctx.beginPath();ctx.roundRect(-700,-560,1400,1120,150);ctx.fill();
-for(let i=0;i<48;i++){const x=-650+i*27;ctx.fillStyle=i%2?"#9caab4":"#6c7b86";ctx.fillRect(x,-590,15,40);ctx.fillRect(x,550,15,40)}
-for(let i=0;i<38;i++){const y=-500+i*27;ctx.fillStyle=i%2?"#8797a2":"#64747f";ctx.fillRect(-730,y,32,15);ctx.fillRect(698,y,32,15)}
+for(let i=0;i<28;i++){const x=-650+i*46;ctx.fillStyle=i%2?"#9caab4":"#6c7b86";ctx.fillRect(x,-590,15,40);ctx.fillRect(x,550,15,40)}
+for(let i=0;i<22;i++){const y=-500+i*46;ctx.fillStyle=i%2?"#8797a2":"#64747f";ctx.fillRect(-730,y,32,15);ctx.fillRect(698,y,32,15)}
 // Asphalt circuit outer edge + infield
 ctx.fillStyle="#252a30";ctx.beginPath();ctx.roundRect(-570,-430,1140,860,130);ctx.fill();
 ctx.fillStyle="#354b3d";ctx.beginPath();ctx.roundRect(-425,-285,850,570,105);ctx.fill();
@@ -105,7 +105,7 @@ ctx.fillStyle="#354b3d";ctx.beginPath();ctx.roundRect(-425,-285,850,570,105);ctx
 ctx.lineWidth=17;ctx.setLineDash([32,20]);ctx.strokeStyle="#f2f2ed";ctx.beginPath();ctx.roundRect(-535,-395,1070,790,120);ctx.stroke();ctx.strokeStyle="#d84a42";ctx.lineDash=[32,20];ctx.lineDashOffset=30;ctx.stroke();ctx.setLineDash([]);
 // track lane guide and start stripe
 ctx.strokeStyle="#aab1b5";ctx.lineWidth=3;ctx.setLineDash([35,28]);ctx.beginPath();ctx.roundRect(-485,-345,970,690,95);ctx.stroke();ctx.setLineDash([]);
-ctx.fillStyle="#f4f4f4";for(let i=0;i<12;i++){ctx.fillRect(-18+i*3,-390,3,28)}
+ctx.fillStyle="#f4f4f4";for(let i=0;i<8;i++){ctx.fillRect(-18+i*5,-390,4,28)}
 // Center skid pad with painted circles and cones
 ctx.fillStyle="#20252b";ctx.beginPath();ctx.ellipse(0,0,190,125,0,0,Math.PI*2);ctx.fill();
 ctx.strokeStyle="#68737c";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,0,165,105,0,0,Math.PI*2);ctx.stroke();
