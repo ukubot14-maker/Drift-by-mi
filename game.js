@@ -19,7 +19,7 @@ $("connectBtn").addEventListener("click",connectMultiplayer);
 function connectMultiplayer(){const url=$("serverUrl").value.trim();if(!url){status.textContent="Enter your Render WSS URL";return}try{if(socket)socket.close();socket=new WebSocket(url);status.textContent="Connecting…";socket.onopen=()=>{status.textContent="MULTIPLAYER CONNECTED";netTimer=0};socket.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==="welcome")myId=m.id;if(m.type==="players")remotePlayers=m.players||[]}catch{}};socket.onerror=()=>status.textContent="Multiplayer connection failed";socket.onclose=()=>{status.textContent="Offline • multiplayer disconnected";myId=null}}catch{status.textContent="Invalid server URL"}}
 $("touchToggle").addEventListener("change",()=>{$("touchControls").style.display=$("touchToggle").checked?"block":"none"});
 $("touchToggle").checked=true;
-addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys.add(k;if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();if(k==="r")reset()});
+addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys.add(k);if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();if(k==="r")reset()});
 addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));
 const stick=$("stick"),knob=$("stickKnob");let pointer=null;
 function stickMove(e){const r=stick.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,limit=r.width*.34,len=Math.hypot(dx,dy),s=len>limit?limit/len:1;touch.x=dx*s/limit;touch.y=dy*s/limit;knob.style.transform=`translate(${dx*s}px,${dy*s}px)`}
