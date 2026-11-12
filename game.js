@@ -70,7 +70,7 @@ const gas=keys.has("w")||keys.has("arrowup")||touch.gas||($("touchToggle").check
 const brake=keys.has("s")||keys.has("arrowdown")||touch.brake||($("touchToggle").checked&&touch.y>.35);
 const hand=keys.has(" ")||touch.hand;
 const speed=Math.hypot(car.vx,car.vy),forward=car.vx*Math.sin(car.a)-car.vy*Math.cos(car.a);
-const steerMax=.57;car.steerAngle=steerInput*steerMax*(1-Math.min(.58,speed/1900));
+const steerMax=.57;car.steerAngle=steerInput*steerMax*(1-Math.min(.35,speed/2600));
 const fx=Math.sin(car.a),fy=-Math.cos(car.a),sx=Math.cos(car.a),sy=Math.sin(car.a);
 const vLong=car.vx*fx+car.vy*fy,vLat=car.vx*sx+car.vy*sy,yawRate=car.omega;
 const wheelbase=31.4,frontDist=wheelbase*.56,rearDist=wheelbase*.44;
@@ -79,11 +79,11 @@ const rearSlip=Math.atan2(vLat-yawRate*rearDist,Math.max(8,Math.abs(vLong)));
 const ff=-frontSlip*1450*(hand?1:.95),rf=-rearSlip*1350*(hand?.43:1);
 const FyFront=Math.max(-8500,Math.min(8500,ff)),FyRear=Math.max(-9000,Math.min(9000,rf));
 const accelLat=(FyFront+FyRear)/1320,yawAccel=(FyFront*frontDist-FyRear*rearDist)/2150;
-const drive=(gas?16500:0)-(brake?14500:0)-(hand?Math.sign(vLong||1)*9200:0)-.00016*speed*speed-.008*1320*9.81;
+const topSpeed=1250;\nconst throttleForce=gas?30000*Math.max(.12,1-Math.max(0,vLong)/topSpeed):0;\nconst drive=throttleForce-(brake?22000:0)-(hand?Math.sign(vLong||1)*13000:0)-.000035*speed*speed-.002*1320*9.81;
 const accelLong=drive/1320;
 car.vx+=(fx*accelLong+sx*accelLat)*dt;car.vy+=(fy*accelLong+sy*accelLat)*dt;
 car.omega+=yawAccel*dt;car.omega*=Math.max(0,1-dt*(hand?.18:.48));car.a+=car.omega*dt;
-car.v=Math.hypot(car.vx,car.vy);const velocityAngle=Math.atan2(car.vx,-car.vy);
+car.v=Math.hypot(car.vx,car.vy);if(car.v>topSpeed){car.vx*=topSpeed/car.v;car.vy*=topSpeed/car.v;car.v=topSpeed}const velocityAngle=Math.atan2(car.vx,-car.vy);
 car.slip=car.v>1?Math.atan2(Math.sin(car.a-velocityAngle),Math.cos(car.a-velocityAngle)):0;
 car.x+=car.vx*dt;car.y+=car.vy*dt;
 if(Math.abs(car.x)>560){car.vx*=-.4;car.x=Math.sign(car.x)*560}if(Math.abs(car.y)>420){car.vy*=-.4;car.y=Math.sign(car.y)*420}
