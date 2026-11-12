@@ -8,7 +8,8 @@ function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight
 addEventListener("resize",resize);resize();
 let running=false,keys=new Set(),touch={x:0,y:0,gas:false,brake:false,hand:false};
 let socket=null,myId=null,remotePlayers=[],netTimer=0;
-const car={x:0,y:0,a:0,v:0,vx:0,vy:0,score:0,name:"Driver",slip:0};
+const car={x:0,y:0,a:0,v:0,vx:0,vy:0,score:0,name:"Driver",slip:0,model:0};
+const carModels=[{name:"Coupe",color:"#ffcf32",accent:"#20252b"},{name:"JDM",color:"#e83b48",accent:"#f4f4f4"},{name:"Muscle",color:"#3c9bff",accent:"#f7d34a"},{name:"Rally",color:"#e9e9e9",accent:"#e13b32"}];
 const tireMarks=[],smoke=[];
 function reset(){car.x=car.y=car.v=car.vx=car.vy=car.score=0;car.a=car.slip=0;tireMarks.length=0;smoke.length=0}
 function start(){if(running)return;running=true;car.name=$("driverName").value.trim()||"Driver";startPanel.classList.add("hidden");settings.classList.add("hidden");status.textContent="FREE ROAM • OFFLINE";reset()}
@@ -22,6 +23,7 @@ $("touchToggle").addEventListener("change",()=>{$("touchControls").style.display
 $("touchToggle").checked=true;
 addEventListener("keydown",e=>{let k=e.key.toLowerCase();keys.add(k);if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();if(k==="r")reset()});
 addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));
+addEventListener("keydown",e=>{if(e.key.toLowerCase()==="c"){car.model=(car.model+1)%carModels.length;status.textContent="CAR: "+carModels[car.model].name+" • press C to switch"}});
 const stick=$("stick"),knob=$("stickKnob");let pointer=null;
 function stickMove(e){const r=stick.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,limit=r.width*.34,len=Math.hypot(dx,dy),s=len>limit?limit/len:1;touch.x=dx*s/limit;touch.y=dy*s/limit;knob.style.transform=`translate(${dx*s}px,${dy*s}px)`}
 stick.addEventListener("pointerdown",e=>{pointer=e.pointerId;stick.setPointerCapture(pointer);stickMove(e)});
@@ -67,16 +69,58 @@ for(let i=smoke.length-1;i>=0;i--){const p=smoke[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.
 if(socket&&socket.readyState===WebSocket.OPEN){netTimer+=dt;if(netTimer>.06){netTimer=0;socket.send(JSON.stringify({type:"state",name:car.name,x:car.x,y:car.y,a:car.a}))}}
 scoreLabel.textContent="Drift: "+Math.floor(car.score);
 }
-function carDraw(x,y,a,color){ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle="#090b0e";ctx.fillRect(-18,-15,8,14);ctx.fillRect(10,-15,8,14);ctx.fillRect(-18,9,8,14);ctx.fillRect(10,9,8,14);ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-13,-25,26,50,7);ctx.fill();ctx.fillStyle="#8fdcff";ctx.fillRect(-9,-13,18,12);ctx.fillStyle="#18242e";ctx.fillRect(-9,3,18,10);ctx.fillStyle="#fff5c2";ctx.fillRect(-10,-22,5,3);ctx.fillRect(5,-22,5,3);ctx.restore()}
+function carDraw(x,y,a,modelIndex=0){
+const m=carModels[modelIndex%carModels.length];ctx.save();ctx.translate(x,y);ctx.rotate(a);
+ctx.shadowColor="#0009";ctx.shadowBlur=8;ctx.shadowOffsetY=3;
+// Four chunky tires with sidewalls and tread
+ctx.fillStyle="#090b0e";for(const [wx,wy] of [[-16,-25],[16,-25],[-16,22],[16,22]]){ctx.beginPath();ctx.roundRect(wx-4,wy-7,8,14,2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle="#343a40";ctx.lineWidth=1;for(let t=-4;t<=4;t+=4){ctx.beginPath();ctx.moveTo(wx-3,wy+t);ctx.lineTo(wx+3,wy+t);ctx.stroke()}ctx.shadowBlur=8}
+ctx.shadowColor="transparent";ctx.shadowOffsetY=0;
+// Sculpted body silhouette
+ctx.fillStyle="#080a0d";ctx.beginPath();ctx.moveTo(-10,-31);ctx.quadraticCurveTo(-17,-28,-17,-18);ctx.lineTo(-19,13);ctx.quadraticCurveTo(-17,29,-10,32);ctx.lineTo(10,32);ctx.quadraticCurveTo(17,29,19,13);ctx.lineTo(17,-18);ctx.quadraticCurveTo(17,-28,10,-31);ctx.closePath();ctx.fill();
+ctx.fillStyle=m.color;ctx.beginPath();ctx.moveTo(-11,-31);ctx.quadraticCurveTo(-15,-27,-15,-17);ctx.lineTo(-17,12);ctx.quadraticCurveTo(-15,26,-9,29);ctx.lineTo(9,29);ctx.quadraticCurveTo(15,26,17,12);ctx.lineTo(15,-17);ctx.quadraticCurveTo(15,-27,11,-31);ctx.closePath();ctx.fill();
+// Hood and trunk highlights
+ctx.fillStyle=m.accent;ctx.globalAlpha=.22;ctx.beginPath();ctx.moveTo(-10,-27);ctx.lineTo(10,-27);ctx.lineTo(12,-13);ctx.lineTo(-12,-13);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+ctx.strokeStyle="#ffffff55";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-12,-25);ctx.lineTo(-13,-8);ctx.moveTo(12,-25);ctx.lineTo(13,-8);ctx.stroke();
+// Windscreen, roof and rear glass
+ctx.fillStyle="#101c27";ctx.beginPath();ctx.moveTo(-12,-12);ctx.lineTo(12,-12);ctx.lineTo(9,-2);ctx.lineTo(-9,-2);ctx.closePath();ctx.fill();
+ctx.fillStyle="#8edfff";ctx.globalAlpha=.8;ctx.beginPath();ctx.moveTo(-10,-11);ctx.lineTo(10,-11);ctx.lineTo(8,-3);ctx.lineTo(-8,-3);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+ctx.fillStyle="#18232d";ctx.beginPath();ctx.moveTo(-9,4);ctx.lineTo(9,4);ctx.lineTo(12,15);ctx.lineTo(-12,15);ctx.closePath();ctx.fill();
+ctx.fillStyle="#76c8e9";ctx.globalAlpha=.65;ctx.fill();ctx.globalAlpha=1;
+// Roof panel, mirrors, lights and bumper details
+ctx.fillStyle="#0d141b";ctx.beginPath();ctx.roundRect(-7,-1,14,5,2);ctx.fill();
+ctx.fillStyle="#fff6cf";ctx.fillRect(-12,-28,6,3);ctx.fillRect(6,-28,6,3);
+ctx.fillStyle="#ff3a4d";ctx.fillRect(-11,25,5,3);ctx.fillRect(6,25,5,3);
+ctx.fillStyle="#161b20";ctx.fillRect(-14,-17,3,7);ctx.fillRect(11,-17,3,7);
+ctx.fillStyle="#ffffff55";ctx.fillRect(-8,-31,16,1);ctx.restore()
+}
 function draw(){
 ctx.fillStyle="#252b31";ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(W/2-car.x,H/2-car.y);
-ctx.fillStyle="#30373e";ctx.fillRect(-5000,-5000,10000,10000);
-ctx.strokeStyle="#3a434b";ctx.lineWidth=1;for(let x=-5000;x<=5000;x+=100){ctx.beginPath();ctx.moveTo(x,-5000);ctx.lineTo(x,5000);ctx.stroke()}for(let y=-5000;y<=5000;y+=100){ctx.beginPath();ctx.moveTo(-5000,y);ctx.lineTo(5000,y);ctx.stroke()}
-ctx.strokeStyle="#e6e8e9";ctx.lineWidth=5;ctx.setLineDash([32,24]);ctx.beginPath();ctx.arc(0,0,430,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-ctx.strokeStyle="#717b84";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,510,0,Math.PI*2);ctx.stroke();
+// New venue: floodlit motorsport stadium with a broad oval drift circuit
+ctx.fillStyle="#17251d";ctx.fillRect(-5000,-5000,10000,10000);
+// Stadium perimeter and grandstand sectors
+ctx.fillStyle="#26333b";ctx.strokeStyle="#596975";ctx.lineWidth=18;ctx.beginPath();ctx.roundRect(-760,-620,1520,1240,180);ctx.fill();ctx.stroke();
+ctx.fillStyle="#36434d";ctx.beginPath();ctx.roundRect(-700,-560,1400,1120,150);ctx.fill();
+for(let i=0;i<48;i++){const x=-650+i*27;ctx.fillStyle=i%2?"#9caab4":"#6c7b86";ctx.fillRect(x,-590,15,40);ctx.fillRect(x,550,15,40)}
+for(let i=0;i<38;i++){const y=-500+i*27;ctx.fillStyle=i%2?"#8797a2":"#64747f";ctx.fillRect(-730,y,32,15);ctx.fillRect(698,y,32,15)}
+// Asphalt circuit outer edge + infield
+ctx.fillStyle="#252a30";ctx.beginPath();ctx.roundRect(-570,-430,1140,860,130);ctx.fill();
+ctx.fillStyle="#354b3d";ctx.beginPath();ctx.roundRect(-425,-285,850,570,105);ctx.fill();
+// track border curbs (red/white segmented)
+ctx.lineWidth=17;ctx.setLineDash([32,20]);ctx.strokeStyle="#f2f2ed";ctx.beginPath();ctx.roundRect(-535,-395,1070,790,120);ctx.stroke();ctx.strokeStyle="#d84a42";ctx.lineDash=[32,20];ctx.lineDashOffset=30;ctx.stroke();ctx.setLineDash([]);
+// track lane guide and start stripe
+ctx.strokeStyle="#aab1b5";ctx.lineWidth=3;ctx.setLineDash([35,28]);ctx.beginPath();ctx.roundRect(-485,-345,970,690,95);ctx.stroke();ctx.setLineDash([]);
+ctx.fillStyle="#f4f4f4";for(let i=0;i<12;i++){ctx.fillRect(-18+i*3,-390,3,28)}
+// Center skid pad with painted circles and cones
+ctx.fillStyle="#20252b";ctx.beginPath();ctx.ellipse(0,0,190,125,0,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle="#68737c";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,0,165,105,0,0,Math.PI*2);ctx.stroke();
+ctx.strokeStyle="#d9dce0";ctx.setLineDash([20,18]);ctx.beginPath();ctx.ellipse(0,0,105,65,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+for(const [cx,cy] of [[-235,-190],[235,-190],[-235,190],[235,190],[-450,0],[450,0]]){ctx.fillStyle="#ff7b22";ctx.beginPath();ctx.moveTo(cx,cy-10);ctx.lineTo(cx-8,cy+8);ctx.lineTo(cx+8,cy+8);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(cx-7,cy+3,14,3)}
+// Floodlight glow pools
+for(const [lx,ly] of [[-650,-500],[650,-500],[-650,500],[650,500]]){const g=ctx.createRadialGradient(lx,ly,5,lx,ly,190);g.addColorStop(0,"#dcecff18");g.addColorStop(1,"#dcecff00");ctx.fillStyle=g;ctx.fillRect(lx-190,ly-190,380,380)}
+
 for(const m of tireMarks){ctx.globalAlpha=Math.min(.7,m.life/2);ctx.fillStyle="#111418";ctx.beginPath();ctx.arc(m.x,m.y,3.2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
 for(const p of smoke){ctx.globalAlpha=Math.max(0,p.life/.55)*.22;ctx.fillStyle="#d9e0e5";ctx.beginPath();ctx.arc(p.x,p.y,7+(1-p.life/.55)*12,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
-carDraw(car.x,car.y,car.a,"#ffcf32");for(const p of remotePlayers){if(p.id===myId)continue;carDraw(p.x,p.y,p.a,p.color||"#5be7ff");ctx.fillStyle="#fff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.name||"Player",p.x,p.y-34)}ctx.restore();
+carDraw(car.x,car.y,car.a,car.model);for(const p of remotePlayers){if(p.id===myId)continue;carDraw(p.x,p.y,p.a,p.model||1);ctx.fillStyle="#fff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.name||"Player",p.x,p.y-34)}ctx.restore();
 if(running&&Math.abs(car.slip)>.12){ctx.fillStyle="#fff";ctx.font="bold 14px system-ui";ctx.fillText("SLIP "+Math.round(Math.abs(car.slip)*57.3)+"°",W-100,82)}
 }
 function frame(t){const dt=Math.min((t-last)/1000||0,.035);last=t;update(dt);draw();requestAnimationFrame(frame)}
